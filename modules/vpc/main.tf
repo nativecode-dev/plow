@@ -1,5 +1,6 @@
-variable "vpc-cidr" {}
+variable "aws-region" {}
 variable "cluster-name" {}
+variable "vpc-cidr" {}
 
 variable "vpc-public-cidrs" {
   type = "list"
@@ -9,11 +10,8 @@ variable "vpc-private-cidrs" {
   type = "list"
 }
 
-variable "aws-region" {}
-
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "1.53.0"
+  source = "terraform-aws-modules/vpc/aws"
 
   name = "${var.cluster-name}-eks-vpc"
   cidr = "${var.vpc-cidr}"

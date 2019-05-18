@@ -1,9 +1,9 @@
-variable "cluster-name" {}
-variable "vpc-id" {}
-variable "instance-type" {}
 variable "asg-min" {}
 variable "asg-max" {}
 variable "asg-desired" {}
+variable "cluster-name" {}
+variable "instance-type" {}
+variable "vpc-id" {}
 
 variable "vpc-private-cidrs" {
   type = "list"
@@ -15,7 +15,6 @@ variable "vpc-public-cidrs" {
 
 module "eks" {
   source       = "terraform-aws-modules/eks/aws"
-  version      = "2.1.0"
   cluster_name = "${var.cluster-name}"
   subnets      = ["${var.vpc-private-cidrs}", "${var.vpc-public-cidrs}"]
   vpc_id       = "${var.vpc-id}"
@@ -29,8 +28,6 @@ module "eks" {
       asg_max_size         = "${var.asg-max}"
       asg_desired_capacity = "${var.asg-desired}"
       asg_min_size         = "${var.asg-min}"
-
-      #   "key_name"       = "${var.ssh_key_name}"
     },
   ]
 

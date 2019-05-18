@@ -1,20 +1,36 @@
 #!/bin/bash
 
+set -e
+
+#------------------------------------------------------------------------------
+# Arguments
+#------------------------------------------------------------------------------
 ACTION="$1"
 
+#------------------------------------------------------------------------------
+# Variables
+#------------------------------------------------------------------------------
 GO=`which go`
 KUBECTL=`which kubectl`
 TERRAFORM=`which terraform`
-PLAN="production.plan"
+
+PLAN_NAME="production"
+PLAN_FILE="${PLAN_NAME}.plan"
+SHELL=`eval "echo ~/.zshrc"`
 
 echo "------------------------------------------------------------------------"
-echo "Plan: ${PLAN}"
+echo " Plan:         ${PLAN_NAME}"
+echo " Plan File:    ${PLAN_FILE}"
+echo " Shell:        ${SHELL}"
 echo "------------------------------------------------------------------------"
-echo "go: ${GO}"
-echo "kubectl: ${KUBECTL}"
-echo "terraform: ${TERRAFORM}"
+echo " go:           ${GO}"
+echo " kubectl:      ${KUBECTL}"
+echo " terraform:    ${TERRAFORM}"
 echo "------------------------------------------------------------------------"
 
+#------------------------------------------------------------------------------
+# Validations
+#------------------------------------------------------------------------------
 if [ ! -f "${GO}" ]; then
     echo "ERROR: go executable not found at '${GO}'"
 fi
@@ -27,22 +43,35 @@ if [ ! -f "${TERRAFORM}" ]; then
     echo "ERROR: terraform executable not found at '${TERRAFORM}'"
 fi
 
-if [ "$ACTION" = "plan" ] || [ "$ACTION" = "start" ]; then
+#------------------------------------------------------------------------------
+# Plan
+#------------------------------------------------------------------------------
+if [ "$ACTION" = "plan" ] || [ "$ACTION" = "deploy" ]; then
     $TERRAFORM init
-    $TERRAFORM plan -out $PLAN
+    $TERRAFORM fmt
+    $TERRAFORM plan -out "${PLAN_FILE}"
 fi
 
-if [ "$ACTION" = "start" ]; then
-    $TERRAFORM apply "$PLAN"
+#------------------------------------------------------------------------------
+# Deploy
+#------------------------------------------------------------------------------
+if [ "$ACTION" = "deploy" ]; then
+    $TERRAFORM apply "${PLAN_FILE}"
     
-    echo "export KUBECONFIG=$KUBECONFIG:~/.kube/$PLAN" >> ~/.zshrc
-    source ~/.zshrc
+    if [ $(grep "KUBECONFIG" $SHELL | wc -l) = 0 ]; then
+        echo "export KUBECONFIG=$KUBECONFIG:~/.kube/${PLAN_NAME}" >> $SHELL
+        source ~/.zshrc
+    fi
     
     $TERRAFORM output config-map > config-map-aws-auth.yaml
     $KUBECTL apply -f config-map-aws-auth.yaml
     $KUBECTL get nodes --watch
 fi
 
-if [ "$ACTION" = "stop" ];  then
+#------------------------------------------------------------------------------
+# Destroy
+#------------------------------------------------------------------------------
+if [ "$ACTION" = "destroy" ];  then
     $TERRAFORM destroy
+    rm "${PLAN_FILE}"
 fi
