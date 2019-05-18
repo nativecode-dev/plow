@@ -8,41 +8,89 @@ set -e
 ACTION="$1"
 ENVIRONMENT=${2:-"production"}
 
+
+
 #------------------------------------------------------------------------------
 # Variables
 #------------------------------------------------------------------------------
+ERROR_EXIT_CODE=0
+
 GO=`which go`
+HELM=`which helm`
 KUBECTL=`which kubectl`
+SNAP=`which snap`
 TERRAFORM=`which terraform`
 
 PLAN_NAME=$ENVIRONMENT
 PLAN_FILE="env_${PLAN_NAME}.plan"
 SHELL=`eval "echo ~/.zshrc"`
 
-echo "------------------------------------------------------------------------"
-echo " Plan:         ${PLAN_NAME}"
-echo " Plan File:    ${PLAN_FILE}"
-echo " Shell:        ${SHELL}"
-echo "------------------------------------------------------------------------"
-echo " go:           ${GO}"
-echo " kubectl:      ${KUBECTL}"
-echo " terraform:    ${TERRAFORM}"
-echo "------------------------------------------------------------------------"
+
 
 #------------------------------------------------------------------------------
 # Validations
 #------------------------------------------------------------------------------
+if [ ! -f "${SNAP}" ]; then
+    echo "CRITICAL ERROR: snap executable not found"
+    exit 100
+fi
+
 if [ ! -f "${GO}" ]; then
-    echo "ERROR: go executable not found at '${GO}'"
+    if [ "$ACTION" = "install" ]; then
+        $SNAP install go
+    else
+        $ERROR_EXIT_CODE=101
+    fi
+fi
+
+if [ ! -f "${HELM}" ]; then
+    if [ "$ACTION" = "install" ]; then
+        $SNAP install helm
+    else
+        $ERROR_EXIT_CODE=101
+    fi
 fi
 
 if [ ! -f "${KUBECTL}" ]; then
-    echo "ERROR: kubectl executable not found at '${KUBECTL}'"
+    if [ "$ACTION" = "install" ]; then
+        $SNAP install kubectl
+    else
+        $ERROR_EXIT_CODE=101
+    fi
 fi
 
 if [ ! -f "${TERRAFORM}" ]; then
-    echo "ERROR: terraform executable not found at '${TERRAFORM}'"
+    if [ "$ACTION" = "install" ]; then
+        $SNAP install terraform
+    else
+        $ERROR_EXIT_CODE=101
+    fi
 fi
+
+if [ "$ERROR_EXIT_CODE" != 0 ]; then
+    echo "CRITICAL ERROR: Missing required dependencies"
+    exit $ERROR_EXIT_CODE
+fi
+
+
+
+#------------------------------------------------------------------------------
+# Banner
+#------------------------------------------------------------------------------
+echo "------------------------------------------------------------------------"
+echo " Plan Name:       ${PLAN_NAME}"
+echo " Plan File:       ${PLAN_FILE}"
+echo " Shell:           ${SHELL}"
+echo "------------------------------------------------------------------------"
+echo " snap:            ${SNAP}"
+echo "------------------------------------------------------------------------"
+echo " go:              ${GO}"
+echo " helm:            ${HELM}"
+echo " kubectl:         ${KUBECTL}"
+echo " terraform:       ${TERRAFORM}"
+echo "------------------------------------------------------------------------"
+
+
 
 #------------------------------------------------------------------------------
 # Plan
@@ -52,6 +100,8 @@ if [ "$ACTION" = "plan" ] || [ "$ACTION" = "deploy" ]; then
     $TERRAFORM fmt
     $TERRAFORM plan -out "${PLAN_FILE}"
 fi
+
+
 
 #------------------------------------------------------------------------------
 # Deploy
@@ -69,10 +119,19 @@ if [ "$ACTION" = "deploy" ]; then
     $KUBECTL get nodes --watch
 fi
 
+
+
 #------------------------------------------------------------------------------
 # Destroy
 #------------------------------------------------------------------------------
 if [ "$ACTION" = "destroy" ];  then
+    if [ $(grep "KUBECONFIG" $SHELL | wc -l) != 0 ]; then
+        sed -i '/export KUBECONFIG*/d' $SHELL
+    fi
+    
+    if [ -f PLAN_FILE ]; then
+        rm "${PLAN_FILE}"
+    fi
+    
     $TERRAFORM destroy
-    rm "${PLAN_FILE}"
 fi
