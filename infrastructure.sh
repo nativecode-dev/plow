@@ -6,6 +6,7 @@ set -e
 # Arguments
 #------------------------------------------------------------------------------
 ACTION="$1"
+ENVIRONMENT=${2:-"production"}
 
 #------------------------------------------------------------------------------
 # Variables
@@ -14,8 +15,8 @@ GO=`which go`
 KUBECTL=`which kubectl`
 TERRAFORM=`which terraform`
 
-PLAN_NAME="production"
-PLAN_FILE="${PLAN_NAME}.plan"
+PLAN_NAME=$ENVIRONMENT
+PLAN_FILE="env_${PLAN_NAME}.plan"
 SHELL=`eval "echo ~/.zshrc"`
 
 echo "------------------------------------------------------------------------"
