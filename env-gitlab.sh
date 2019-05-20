@@ -8,4 +8,4 @@ export NUM_NODES=2
 export SERVICE_ACCOUNT=tiller
 
 cd gitlab
-bash ./scripts/eks_bootstrap_script ${ENVIRONMENT_ACTION}
+$BASH ./scripts/eks_bootstrap_script ${ENVIRONMENT_ACTION}
