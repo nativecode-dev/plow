@@ -13,21 +13,21 @@ provider "aws" {
 
 module "eks-vpc" {
   source            = "./modules/vpc"
-  vpc-cidr          = "${var.vpc-cidr}"
+  aws-region        = "${var.aws-region}"
   cluster-name      = "${var.cluster-name}"
+  vpc-cidr          = "${var.vpc-cidr}"
   vpc-public-cidrs  = "${var.vpc-public-cidrs}"
   vpc-private-cidrs = "${var.vpc-private-cidrs}"
-  aws-region        = "${var.aws-region}"
 }
 
 module "eks-cluster" {
   source            = "./modules/eks"
-  vpc-id            = "${module.eks-vpc.vpc_id}"
+  asg-desired       = "${var.asg-desired}"
+  asg-max           = "${var.asg-max}"
+  asg-min           = "${var.asg-min}"
   cluster-name      = "${var.cluster-name}"
+  instance-type     = "${var.instance-type}"
+  vpc-id            = "${module.eks-vpc.vpc_id}"
   vpc-public-cidrs  = "${module.eks-vpc.public_subnets}"
   vpc-private-cidrs = "${module.eks-vpc.private_subnets}"
-  instance-type     = "${var.instance-type}"
-  asg-min           = "${var.asg-min}"
-  asg-max           = "${var.asg-max}"
-  asg-desired       = "${var.asg-desired}"
 }

@@ -49,3 +49,20 @@ resource "aws_iam_role_policy_attachment" "alb_ingress_permissions_attach" {
   role       = "${module.eks.worker_iam_role_name}"
   policy_arn = "${aws_iam_policy.alb_ingress_permissions.arn}"
 }
+
+/*
+resource "local_file" "kubectl-config" {
+  depends_on = [module.eks.kubeconfig]
+  content    = "${module.eks-cluster.kubeconfig}"
+  filename   = "${path.module}/kubectl.config"
+}
+
+resource "aws_s3_bucket_object" "object" {
+  depends_on = [local_file.kubectl-config]
+  bucket = "nativecode"
+  key    = "kubectl.config"
+  source = "${path.module}/kubectl.config"
+  etag   = "${md5(file("${path.module}/kubectl.config"))}"
+}
+*/
+
