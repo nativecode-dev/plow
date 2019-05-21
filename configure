@@ -11,6 +11,10 @@ export HOME=`eval "echo ~/"`
 export SHELL=$(echo $SHELL)
 
 export AWS_IAM_AUTH=`which aws-iam-authenticator`
+export AWS_HEPTIO_AUTH=`which heptio-authenticator-aws`
+
+URL_IAM_AUTH=https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
+URL_HEPTIO_AUTH=https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.3.0/heptio-authenticator-aws_0.3.0_linux_amd64
 
 #-------------------------------------------------------------------------------
 # Show Help
@@ -21,6 +25,7 @@ if [ "${ENVIRONMENT_ACTION}" = "help" ]; then
     exit
 fi
 
+
 #-------------------------------------------------------------------------------
 # Ensure Kubernetes Profile Folder
 #-------------------------------------------------------------------------------
@@ -29,14 +34,28 @@ if [ ! -h "${HOME}/.kube" ]; then
     ln -s ${HOME}/snap/eksctl/current ${HOME}/.kube
 fi
 
+
 #-------------------------------------------------------------------------------
-# Ensure aws-iam-authenticator
+# Ensure user bin
+#-------------------------------------------------------------------------------
+if [ ! -d "${HOME}/bin" ]; then
+    mkdir -p $HOME/bin
+fi
+
+
+#-------------------------------------------------------------------------------
+# Ensure auth binaries
 #-------------------------------------------------------------------------------
 if [ "${AWS_IAM_AUTH}" = "" ] || [ ! -f "${AWS_IAM_AUTH}" ]; then
-    mkdir -p $HOME/bin
-    curl -sS -o $HOME/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator > /dev/null
+    curl -sS -o $HOME/bin/aws-iam-authenticator ${URL_IAM_AUTH} > /dev/null
     chmod +x $HOME/bin/aws-iam-authenticator
 fi
+
+if [ "${AWS_HEPTIO_AUTH}" = "" ] || [ ! -f "${AWS_HEPTIO_AUTH}" ]; then
+    curl -sS -o $HOME/bin/heptio-authenticator-aws ${URL_HEPTIO_AUTH} > /dev/null
+    chmod +x $HOME/bin/heptio-authenticator-aws
+fi
+
 
 #-------------------------------------------------------------------------------
 # Configure GitLab
