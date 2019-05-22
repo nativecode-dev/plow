@@ -5,34 +5,27 @@
 #-------------------------------------------------------------------------------
 export ENVIRONMENT=${1:-production}
 export ENVIRONMENT_ACTION=${2:-help}
+export ENVIRONMENT_DOMAIN=${3:-nativecode.net}
+
+export ENVIRONMENT_BUCKET=${ENVIRONMENT_DOMAIN}
+export ENVIRONMENT_CLUSTER="${ENVIRONMENT}.${ENVIRONMENT_DOMAIN}"
+export ENVIRONMENT_CLUSTER_IP=10.10.10.10
+export ENVIRONMENT_URL="git.${ENVIRONMENT}.${ENVIRONMENT_DOMAIN}"
 
 export BASH=`which bash`
 export HOME=`eval "echo ~/"`
 export SHELL=$(echo $SHELL)
+
+export EKSCTL=`which eksctl`
+export HELM=`which helm`
+export KOPS=`which kops`
+export KUBECTL=`which kubectl`
 
 export AWS_IAM_AUTH=`which aws-iam-authenticator`
 export AWS_HEPTIO_AUTH=`which heptio-authenticator-aws`
 
 URL_IAM_AUTH=https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
 URL_HEPTIO_AUTH=https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.3.0/heptio-authenticator-aws_0.3.0_linux_amd64
-
-#-------------------------------------------------------------------------------
-# Show Help
-#-------------------------------------------------------------------------------
-if [ "${ENVIRONMENT_ACTION}" = "help" ]; then
-    echo "ENVIRONMENT: ${ENVIRONMENT}"
-    echo "ENVIRONMENT_ACTION: ${ENVIRONMENT_ACTION}"
-    exit
-fi
-
-
-#-------------------------------------------------------------------------------
-# Ensure Kubernetes Profile Folder
-#-------------------------------------------------------------------------------
-if [ ! -h "${HOME}/.kube" ]; then
-    echo "Profile symlink does not exist"
-    ln -s ${HOME}/snap/eksctl/current ${HOME}/.kube
-fi
 
 
 #-------------------------------------------------------------------------------
@@ -47,13 +40,55 @@ fi
 # Ensure auth binaries
 #-------------------------------------------------------------------------------
 if [ "${AWS_IAM_AUTH}" = "" ] || [ ! -f "${AWS_IAM_AUTH}" ]; then
+    echo "Downloading 'aws-iam-authenticator'"
     curl -sS -o $HOME/bin/aws-iam-authenticator ${URL_IAM_AUTH} > /dev/null
     chmod +x $HOME/bin/aws-iam-authenticator
+    export AWS_IAM_AUTH=`which aws-iam-authenticator`
 fi
 
 if [ "${AWS_HEPTIO_AUTH}" = "" ] || [ ! -f "${AWS_HEPTIO_AUTH}" ]; then
+    echo "Downloading 'heptio-authenticator-aws'"
     curl -sSL -o $HOME/bin/heptio-authenticator-aws ${URL_HEPTIO_AUTH} > /dev/null
     chmod +x $HOME/bin/heptio-authenticator-aws
+    export AWS_HEPTIO_AUTH=`which heptio-authenticator-aws`
+fi
+
+
+#-------------------------------------------------------------------------------
+# Ensure Kubernetes Profile Folder
+#-------------------------------------------------------------------------------
+if [ ! -h "${HOME}/.kube" ]; then
+    echo "Profile symlink does not exist"
+    ln -s ${HOME}/snap/eksctl/current ${HOME}/.kube
+fi
+
+
+#-------------------------------------------------------------------------------
+# Show Help
+#-------------------------------------------------------------------------------
+if [ "${ENVIRONMENT_ACTION}" = "help" ] || [ "${ENVIRONMENT_ACTION}" = "" ]; then
+    echo "-------------------------------------------------------------------------------"
+    echo "| ENVIRONMENT:              ${ENVIRONMENT}"
+    echo "| ENVIRONMENT_ACTION:       ${ENVIRONMENT_ACTION}"
+    echo "| ENVIRONMENT_DOMAIN:       ${ENVIRONMENT_DOMAIN}"
+    echo "-------------------------------------------------------------------------------"
+    echo "| ENVIRONMENT_BUCKET:       ${ENVIRONMENT_BUCKET}"
+    echo "| ENVIRONMENT_CLUSTER:      ${ENVIRONMENT_CLUSTER}"
+    echo "| ENVIRONMENT_CLUSTER_IP:   ${ENVIRONMENT_CLUSTER_IP}"
+    echo "| ENVIRONMENT_URL:          ${ENVIRONMENT_URL}"
+    echo "-------------------------------------------------------------------------------"
+    echo "  BASH:                     ${BASH}"
+    echo "  SHELL:                    ${SHELL}"
+    echo "-------------------------------------------------------------------------------"
+    echo "  AWS_IAM_AUTH:             ${AWS_IAM_AUTH:-<missing>}"
+    echo "  AWS_HEPTIO_AUTH:          ${AWS_HEPTIO_AUTH:-<missing>}"
+    echo "-------------------------------------------------------------------------------"
+    echo "  EKSCTL:                   ${EKSCTL:-<missing>}"
+    echo "  HELM:                     ${HELM:-<missing>}"
+    echo "  KOPS:                     ${KOPS:-<missing>}"
+    echo "  KUBECTL:                  ${KUBECTL:-<missing>}"
+    echo "-------------------------------------------------------------------------------"
+    exit
 fi
 
 
