@@ -52,7 +52,7 @@ if [ "${AWS_IAM_AUTH}" = "" ] || [ ! -f "${AWS_IAM_AUTH}" ]; then
 fi
 
 if [ "${AWS_HEPTIO_AUTH}" = "" ] || [ ! -f "${AWS_HEPTIO_AUTH}" ]; then
-    curl -sS -o $HOME/bin/heptio-authenticator-aws ${URL_HEPTIO_AUTH} > /dev/null
+    curl -sSL -o $HOME/bin/heptio-authenticator-aws ${URL_HEPTIO_AUTH} > /dev/null
     chmod +x $HOME/bin/heptio-authenticator-aws
 fi
 
